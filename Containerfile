@@ -18,10 +18,10 @@ RUN wget -O visaid_builder.zip https://github.com/WGBH-MLA/visaid_builder/archiv
 
 # Create a virtual environment
 RUN python3 -m venv /visaid_builder/.venv && \
-    /visaid_builder/.venv/bin/pip install --upgrade pip && \
-    /visaid_builder/.venv/bin/pip install pandas==2.0.3 && \ 
-    /visaid_builder/.venv/bin/pip install -r /visaid_builder/requirements.txt
+/visaid_builder/.venv/bin/pip install --upgrade pip && \
+/visaid_builder/.venv/bin/pip install -r /visaid_builder/requirements.txt
 
+#TO do: implement Pandas
 COPY . /
 
 # Ensure the script has execution permissions
