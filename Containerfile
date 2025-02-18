@@ -1,5 +1,8 @@
 # Use a base image as the base
 FROM ghcr.io/clamsproject/app-swt-detection:v7.4
+ENV visaid_build_version=60cfadf67614251c215198a119a7dafc739a16de
+# default subdirectory inside the zip file downloaded from github 
+ENV visaid_dir=/visaid_builder-$visaid_build_version
 
 WORKDIR /
 
@@ -9,19 +12,14 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --upgrade pip  
-
-RUN wget -O visaid_builder.zip https://github.com/WGBH-MLA/visaid_builder/archive/refs/heads/main.zip && \
+RUN wget -O visaid_builder.zip https://github.com/WGBH-MLA/visaid_builder/archive/$visaid_build_version.zip && \
     unzip visaid_builder.zip && \
-    rm visaid_builder.zip && \
-    mv visaid_builder-main visaid_builder
+    rm visaid_builder.zip
 
 # Create a virtual environment
-RUN python3 -m venv /visaid_builder/.venv && \
-/visaid_builder/.venv/bin/pip install --upgrade pip && \
-/visaid_builder/.venv/bin/pip install -r /visaid_builder/requirements.txt
+RUN python3 -m venv $visaid_dir/.venv
+RUN $visaid_dir/.venv/bin/pip install -r $visaid_dir/requirements.txt
 
-#TO do: implement Pandas
 COPY . /
 
 # Ensure the script has execution permissions
