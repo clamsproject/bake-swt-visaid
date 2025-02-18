@@ -1,0 +1,53 @@
+{
+  "swt_params": {
+      "pretty": true,
+      "tpUsePosModel": true,
+      "tpModelName": "convnext_small",
+      "tpStartAt": 0,
+      "tpStopAt": 9000000,
+      "tpSampleRate": 250,
+      "tfMinTPScore": 0.05,
+      "tfMinTFScore": 0.25,
+      "tfMinTFDuration": 1900,
+      "tfAllowOverlap": false,
+      "tfLabelMapPreset": "nopreset",
+      "tfLabelMap": [
+        "B:bars",
+        "S:slate",
+        "I:chyron",
+        "Y:chyron",
+        "N:chyron",
+        "M:main title",
+        "F:filmed text",
+        "C:credits",
+        "R:credits",
+        "O:other text",
+        "L:other text",
+        "E:other text",
+        "U:other text",
+        "K:other text",
+        "G:other text",
+        "T:other text"
+        ]
+    },
+  "visaid_params": {
+      "include_only": null,
+      "exclude": [],
+      "max_unsampled_gap": 60000,
+      "subsampling": {
+        "bars": 120100,
+        "slate": 9900,
+        "chyron": 15100,
+        "main title": 15100,
+        "other text": 15100,
+        "filmed text": 30100,
+        "credits": 1900 },
+      "default_subsampling": 60100,
+      "include_first_time": false,
+      "include_final_time": false,
+      "display_video_duration": true,
+      "display_image_ms": true,
+      "aapb_timecode_link": true
+    }
+}
+
