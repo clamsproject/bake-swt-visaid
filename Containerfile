@@ -1,9 +1,28 @@
-# placeholder for the containerfile
-# things TODO
-# base from the latest swt image (debian)
-# install system dependencies, candidates - git wget unzip virtuanenv 
-# git-clone or wget-unzip visaid source code
-# setup venv for visaid 
-# copy run.sh to a proper location 
-# set entrypoint to take any number of arguments of input video files (or directories)
-# see https://github.com/clamsproject/bake-swt-visaid/issues and https://github.com/clamsproject/bake-swt-visaid/blob/09d4850a3aed871d7958dbb8d7fb40d1032c8297/run.sh for expected behavior and variables. 
+# Use a base image as the base
+FROM ghcr.io/clamsproject/app-swt-detection:v7.4
+ENV visaid_build_version=60cfadf67614251c215198a119a7dafc739a16de
+# default subdirectory inside the zip file downloaded from github 
+ENV visaid_dir=/visaid_builder-$visaid_build_version
+
+WORKDIR /
+
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -O visaid_builder.zip https://github.com/WGBH-MLA/visaid_builder/archive/$visaid_build_version.zip && \
+    unzip visaid_builder.zip && \
+    rm visaid_builder.zip
+
+# Create a virtual environment
+RUN python3 -m venv $visaid_dir/.venv
+RUN $visaid_dir/.venv/bin/pip install -r $visaid_dir/requirements.txt
+
+COPY . /
+
+# Ensure the script has execution permissions
+RUN chmod +x /run.sh
+
+ENTRYPOINT ["/run.sh"]
