@@ -1,0 +1,44 @@
+{
+  "swt_params": {
+      "pretty": true,
+      "tpUsePosModel": true,
+      "tpModelName": "convnext_tiny",
+      "tpStartAt": 0,
+      "tpStopAt": 9000000,
+      "tpSampleRate": 250,
+      "tfMinTPScore": 0.05,
+      "tfMinTFScore": 0.25,
+      "tfMinTFDuration": 1900,
+      "tfAllowOverlap": false,
+      "tfLabelMapPreset": "nopreset",
+      "tfLabelMap": [
+        "S":"scene with text",
+        "I":"scene with text",
+        "Y":"scene with text",
+        "N":"scene with text",
+        "M":"scene with text",
+        "F":"scene with text",
+        "C":"scene with text",
+        "R":"scene with text",
+        "O":"scene with text",
+        "L":"scene with text",
+        "E":"scene with text",
+        "U":"scene with text",
+        "K":"scene with text",
+        "G":"scene with text",
+        "T":"scene with text"        ]
+        ]
+  },
+  "visaid_params": {
+      "include_only": null,
+      "exclude": [],
+      "max_unsampled_gap": 60000,
+      "default_subsampling": 10100,
+      "include_first_time": false,
+      "include_final_time": false,
+      "display_video_duration": true,
+      "display_image_ms": false,
+      "aapb_timecode_link": false
+    }
+}
+

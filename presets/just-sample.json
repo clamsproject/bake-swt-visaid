@@ -1,0 +1,22 @@
+{
+  "swt_params": {
+      "pretty": true,
+      "tpModelName": "convnext_tiny",
+      "tpSampleRate": 25000,
+      "tfMinTPScore": 1.0,
+      "tfMinTFScore": 1.0,
+      "tfMinTFDuration": 26000,
+      "tfAllowOverlap": false
+    },
+  "visaid_params": {
+      "include_only": [],
+      "exclude": [],
+      "max_unsampled_gap": 60000,
+      "include_first_time": true,
+      "include_final_time": true,
+      "display_video_duration": true,
+      "display_image_ms": false,
+      "aapb_timecode_link": false
+    }
+}
+

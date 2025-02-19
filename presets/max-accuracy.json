@@ -2,10 +2,10 @@
   "swt_params": {
       "pretty": true,
       "tpUsePosModel": true,
-      "tpModelName": "convnext_small",
+      "tpModelName": "convnext_lg",
       "tpStartAt": 0,
       "tpStopAt": 9000000,
-      "tpSampleRate": 250,
+      "tpSampleRate": 125,
       "tfMinTPScore": 0.05,
       "tfMinTFScore": 0.25,
       "tfMinTFDuration": 1900,
