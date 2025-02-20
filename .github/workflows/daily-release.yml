@@ -1,0 +1,13 @@
+name: "📦 Release to ghcp"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "51 03 * * *"
+
+jobs:
+  call-pypi-release:
+    name: "🤙 Call bake-to-ghcr release workflow"
+    uses: clamsproject/.github/.github/workflows/bake-publish-daily.yml@main
+    secrets: inherit
+
