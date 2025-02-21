@@ -9,5 +9,7 @@ jobs:
   call-pypi-release:
     name: "🤙 Call bake-to-ghcr release workflow"
     uses: clamsproject/.github/.github/workflows/bake-publish-daily.yml@main
+    with:
+      arm64: true
     secrets: inherit
 
