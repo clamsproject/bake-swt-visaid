@@ -4,7 +4,7 @@
 data_dir=${data_dir:-/data}
 output_dir=${output_dir:-/output}
 config_user_dir=${config_user_dir:-/config}
-vid_exts=${vid_exts:-"mp4 mkv avi"}
+vid_exts=${vid_exts:-"mp4,mkv,avi"}
 
 # these are more like to be hardcoded
 config_preset_dir=${config_preset_dir:-/presets}
@@ -14,6 +14,7 @@ swt_suffix=${swt_suffix:-swt.mmif}
 visaid_dir=${visaid_dir:-/visaid_builder-main}
 visaid_py=${visaid_py:-$visaid_dir/.venv/bin/python3}
 visaid_suffix=${visaid_suffix:-visaid.html}
+no_mmif=${no_mmif:-0}
 
 function locate_config_file {
     # if $1 is an absolute path (starts with /), and exists, return it
@@ -64,11 +65,20 @@ function prep_swt_params {
 # all other arguments are treated as positional ones for target input files or directories
 # if no config is provided, the default config (`default`) is used
 confname=$(locate_config_file default)
-OPTSTRING=":c:"
+OPTSTRING=":c:nx:h"
 while getopts $OPTSTRING opt; do
     case $opt in
         c)
             confname=$(locate_config_file $OPTARG)
+            ;;
+        n)
+            no_mmif=1
+            ;;
+        x)
+            vid_exts=$OPTARG
+            ;;
+        h)
+            help
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -82,6 +92,18 @@ while getopts $OPTSTRING opt; do
 done
 shift $((OPTIND -1))
 
+function help {
+    echo "Usage: run.sh [-c config_name] [input_file_or_dir ...]"
+    echo "Options:"
+    echo "  -c config_name: specify the configuration file to use"
+    echo "  -n: do not output intermediate MMIF files"
+    echo "  input_file_or_dir: a list of input files or directories to process"
+    echo "  If a directory is provided, all files with extensions specified in the vid_exts variable will be processed"
+    echo "  If no input files or directories are provided, the default configuration will be used to process all files in the data directory"
+    exit 1
+    
+}
+
 echo "Using config file: $confname"
 
 function process_video {
@@ -92,6 +114,12 @@ function process_video {
     clams source video:"$1" | $swt_py $swt_dir/cli.py "${swt_conf[@]}" -- > $output_dir/$vname.$swt_suffix
     $visaid_py $visaid_dir/use_swt.py $output_dir/$vname.$swt_suffix -vsc $visaid_conf_file > $output_dir/$vname.$visaid_suffix
     set +x
+    # delete swt output if no_mmif is set
+    if [ $no_mmif -eq 1 ]; then
+        set -x
+        rm $output_dir/$vname.$swt_suffix
+        set +x
+    fi
 }
 
 for arg in $@; do 
@@ -102,7 +130,7 @@ for arg in $@; do
     if [ -f $data_dir/$arg ]; then
         process_video $data_dir/$arg
     elif [ -d $data_dir/$arg ]; then
-        for ext in $vid_exts; do
+        for ext in ${vid_exts//,/ }; do
             for vid in $(find $data_dir/$arg -type f -name "*.$ext"); do
                 process_video $vid
             done
