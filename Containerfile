@@ -7,6 +7,7 @@ ENV visaid_dir=/visaid_builder-$visaid_build_version
 WORKDIR /
 
 RUN apt-get update && apt-get install -y \
+    jq \
     wget \
     unzip \
     python3-venv \
