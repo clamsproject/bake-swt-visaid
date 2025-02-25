@@ -91,6 +91,7 @@ while getopts $OPTSTRING opt; do
             ;;
         h)
             usage
+            exit 0
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2

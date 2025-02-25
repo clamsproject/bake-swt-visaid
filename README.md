@@ -6,29 +6,29 @@ The sofware is packaged as a Docker image that combines two pieces of software:
 1. The [`swt-detection`](https://apps.clams.ai/#swt-detection) CLAMS app
 2. The [`visaid_builder`](https://github.com/WGBH-MLA/visaid_builder) Python module
 
-A visaid is a simple, portalble HTML document displaying thumbnail images of key scenes from a video.  Its purpose is to provide visual index for overview and navigation.  The following image is from [an example visaid](/examples/cpb-aacip-b45eb62bd60_visaid.html) for [an item in the American Archive of Public Broadcasting](https://americanarchive.org/catalog/cpb-aacip-b45eb62bd60).
+A visaid is a simple, portalble HTML document displaying thumbnail images of key scenes from a video. Its purpose is to provide visual index for overview and navigation. The following image is from [an example visaid](/examples/cpb-aacip-b45eb62bd60_visaid.html) for [an item in the American Archive of Public Broadcasting](https://americanarchive.org/catalog/cpb-aacip-b45eb62bd60).
 
 ![Screenshot of an example visaid](/examples/visaid_example_screenshot.png)
 *Screenshot from an example visaid*
 
 # Prerequisites
 
-This software is intended to be run in a Docker container.  So you need a container runtime (e.g., [Docker](https://www.docker.com/) or [Podman](https://podman.io/)). For this guide, we will assume the `docker` command is used.
+This software is intended to be run in a Docker container. So you need a container runtime (e.g., [Docker](https://www.docker.com/) or [Podman](https://podman.io/)). For this guide, we will assume the `docker` command is used.
 
 We will also assume use of a `bash` shell, as available in Linux distributions, MacOS, and Windows (via WSL) systems.
 
 # Quick start
 
-You need to acquire the Docker image.  To pull the most recent version from our package repository available at GtiHub Container Registry (ghcr), run 
+You need to acquire the Docker image. To pull the most recent version from our package repository available at GtiHub Container Registry (ghcr), run 
 ```
 docker pull ghcr.io/clamsproject/bake-swt-visaid:latest
 ```
 
-You need to identify two directories:  a directory containing your input video files and your directory that will contain the visaid output.  For example, suppose the following directories:
+Then, you need to identify two directories: a directory containing your input video files and your directory that will contain the visaid output. For example, suppose the following directories:
 
-Videos directory:  `/Users/casey/my_vids`
+Videos directory: `/Users/casey/my_vids`
 
-Outputs directory:  `/Users/casey/visaids`
+Outputs directory: `/Users/casey/visaids`
 
 Suppose the video you want to analyze is called `video1.mp4`.
 
@@ -59,7 +59,7 @@ To run this specific Docker image, one needs to use (at least) two or three moun
 docker run --rm -v /path/to/data:/data -v /path/to/output:/output -v /path/to/config:/config bake-swt-visaid:latest [options] <input_files_or_directories>
 ```
 
-- `-v xxx:yyy` parts are for "mounting" parts of file system to the container to share files between the host computer (`xxx` directory) and the container ("shown" as `yyy` inside the virtual machine). Two mounts are required:
+- `-v xxx:yyy` parts are for "mounting" partial file system to the container to share files between the host computer (`xxx` directory) and the container ("shown" as `yyy` inside the virtual machine). Two mounts are required:
     - `/data`: Directory containing input video files
     - `/output`: Directory to store output files
     - Then (optionally) mount the third directory containing the custom configuration file(s) to `/config`. See below for more information on configuration.
@@ -74,10 +74,10 @@ There are two parts one can configure when running the docker-run command:
 ## Configuing the baked pipeline 
 This is the `[options]` part of the above example command. Available options are: 
 
-- `-h` : display a help message
-- `-c config_name` : specify the configuration file to use
-- `-n` : do not output intermediate MMIF files
-- `-x video_extensions` : specify a comma-separated list of extensions
+- `-h` : display a help message and exit (do not use with other options)
+- `-c config_name` : specify the configuration file to use (default is `default`, see below for what this configuration file is for)
+- `-n` : do not output intermediate MMIF files (default is to output)
+- `-x video_extensions` : specify a comma-separated list of extensions (default is `mp4,mkv,avi`)
 
 > [!NOTE]
 > All options are optional. If not specified, the default values will be used.
@@ -100,17 +100,15 @@ docker run [options for docker-run] bake-swt-visaid:latest -c fast-messy input_v
 ```
 to use `fast-messy` preset. 
 
+The available presets can be glossed as follows:
+- `default`: Reasonable compromise between speed and accuracy. Will be use when `-c` option is absent.
+- `max-accuracy`: Slowest, best known accuracy settings. (~0.4x speed of `default`)
+- `fast-messy`: Fast, imprecise, but still usable. (~2.5x speed of `default`)
+- `single-bin`: Detects scenes with text, but does not distinguish between different types of scenes. (~1.3x speed of `default`)
+- `just-sample`: Does not use scene identification; just creates a visaid via periodic sampling. (~5x speed of default)
+
 > [!NOTE]
-> If you don't use `-c` option at all, the `default` preset will be used.
-
-The available presets can glossed as follows:
-- `default`: Reasonable compromise between speed and accuracy.
-- `max-accuracy`:  Slowest, best known accuracy settings.  (~0.4x speed of `default`)
-- `fast-messy`:  Fast, imprecise, but still usable. (~2.5x speed of `default`)
-- `single-bin`:  Detects scenes with text, but does not distinguish between different types of scenes. (~1.3x speed of `default`)
-- `just-sample`:  Does not use scene identification; just creates a visaid via periodic sampling. (~5x speed of default)
-
-*Note that the relative speeds are estimates and, in practice, depend on characteristics of the input video.  The estimate assume use of a GPU.  The multipliers will exagerated, increased by a factor of 2 or more, if processing is done only with a CPU.*
+> The relative speeds are estimates and, in practice, depend on characteristics of the input video. The estimate assume use of GPU (CUDA). The multipliers will be exaggerated, increased by a factor of 2 or more, if processing is done only with CPU.*
 
 
 ### Using custom configuration
@@ -139,7 +137,7 @@ docker build -t bake-swt-visaid -f Containerfile .
 ```
 
 > [!NOTE]
-> The image spec file name is (unconventionally) `Containerfile`, so you need to specify it with `-f` option.
+> In this repo, the image spec file name is (unconventionally) `Containerfile`, so you need to specify it with `-f` option.
  
 This will build a local Docker image named `bake-swt-visaid` (or `bake-swt-visaid:latest` in full name with the "tag", they are synonymous). 
 
@@ -148,7 +146,7 @@ Within the container, the `run.sh` script is the main entry point for running th
 See [the container specification](Containerfile#L2-L3) for the exact versions of the tools used.
 
 
-## Configuration File Format
+## Configuration file format
 The JSON must have two keys; `swt_params` and `visaid_params`. These keys should contain the parameters for the `swt-detection` and `visaid_builder` tools, respectively.
 
 ```json
@@ -165,16 +163,18 @@ The JSON must have two keys; `swt_params` and `visaid_params`. These keys should
 ```
 
 For the `swt-detection` CLAMS app, see **Configurable Parameters** section in the documentation for the corresponding version, available at the [CLAMS AppDirectory](https://apps.clams.ai/#swt-detection). Read carefully the documentation to understand the parameters and their value formats.
+
 > [!TIP]
 > - CLAMS apps expect the parameters are passed as "string" values, so it's almost always safe to wrap the values in double quotes in JSON. 
 > - For `multivalued=true` parameters (e.g., `tfDynamicSceneLabels` in the `swt-detection` app), you can pass an array of (string) values.
-> - For `type=map` parameters (e.g., `tfLabelMap` in the `swt-detection` app), you CANNOT pass a JSON map object, but an array of strings in the format of `key:value`.
+> - For `type=map` parameters (e.g., `tfLabelMap` in the `swt-detection` app), you CANNOT pass a JSON map object, but an array of strings in the format of `"key:value"`.
 
 For the `visaid_builder` tool, the customizable parameters are documented [inside the tool's source code](https://github.com/WGBH-MLA/visaid_builder/blob/60cfadf67614251c215198a119a7dafc739a16de/proc_swt.py#L28-L38).
+
 > [!NOTE]
 > The URL to the source code can change when another version (commit) is used for the prebaked image.
 
-### Example Configuration
+## Example configuration
 
 See [`presets/default.json`](presets/default.json) for an example configuration file.
 
