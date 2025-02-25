@@ -78,6 +78,14 @@ This is the `[options]` part of the above example command. Available options are
 > [!NOTE]
 > All options are optional. If not specified, the default values will be used.
 
+> [!NOTE]
+> To handle video files, `ffmpeg` installed inside the container (which is likely different from the `ffmpeg` on the host computer if already installed) is used. To see information about the `ffmpeg` installation, for example to list up the available codecs, you can run the following command:
+> ```
+> docker run run -it --entrypoint "" bake_image_name ffmpeg -codecs
+> ```
+> What's important here is the `--entrypoint ""` option, which disables the default command to run and run `ffmpeg ...` instead.
+
+
 ## Configuring individual elements in the pipeline
 
 This can be done by passing a configuration file name using `-c` option. We provide some configuration presets in the [`presets`](presets) directory. 
