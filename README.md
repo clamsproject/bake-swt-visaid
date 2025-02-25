@@ -1,57 +1,60 @@
 # Overview
 
-This project provides a software package for processing video files using 
-1. [`swt-detection`](https://apps.clams.ai/#swt-detection) CLAMS app
-2. visual aids with `visaid_builder`. 
+This is a software package to analyze digital videos, to detect _scenes with text_ and create visual indexes ("visaids") showing those scenes.
 
-to detect _scenes-with-text_ and generate visualization of the detected scenes.
+The sofware is packaged as a Docker image that combines two pieces of software:
+1. The [`swt-detection`](https://apps.clams.ai/#swt-detection) CLAMS app
+2. The [`visaid_builder`](https://github.com/WGBH-MLA/visaid_builder) Python module
 
-The `run.sh` script is the main entry point for running the processing pipeline.
+A visaid is a simple, portalble HTML document displaying thumbnail images of key scenes from a video.  Its purpose is to provide visual index for overview and navigation.  The following image is from [an example visaid](/examples/cpb-aacip-b45eb62bd60_visaid.html) for [an item in the American Archive of Public Broadcasting](https://americanarchive.org/catalog/cpb-aacip-b45eb62bd60).
 
-See [the container specification](Containerfile#L2-L3) for the exact versions of the tools used.
+![Screenshot of an example visaid](/examples/visaid_example_screenshot.png)
+*Screenshot from an example visaid*
 
 # Prerequisites
 
-- container runtime (e.g., [Docker](https://www.docker.com/) or [Podman](https://podman.io/)). For this guide, we will assume `docker` command is being used.
-- `bash` shell (For Windows users, [WSL](https://learn.microsoft.com/en-us/windows/wsl/) is recommended to obtain a `bash` shell.)
+This software is intended to be run in a Docker container.  So you need a container runtime (e.g., [Docker](https://www.docker.com/) or [Podman](https://podman.io/)). For this guide, we will assume the `docker` command is used.
 
-> [!NOTE]
-> TODO: add "# quick start" as a part of https://github.com/clamsproject/bake-swt-visaid/issues/5
+We will also assume use of a `bash` shell, as available in Linux distributions, MacOS, and Windows (via WSL) systems.
 
-# Setup
+# Quick start
 
-## Downloading prebuilt image
-Simply pull from our package repository available at GtiHub Container Registry (ghcr):
-
+You need to acquire the Docker image.  To pull the most recent version from our package repository available at GtiHub Container Registry (ghcr), run 
 ```
 docker pull ghcr.io/clamsproject/bake-swt-visaid:latest
 ```
 
-and you're ready to go. See the [Usage](#usage) section for how to use the package. 
+You need to identify two directories:  a directory containing your input video files and your directory that will contain the visaid output.  For example, suppose the following directories:
 
-## Building the docker image
+Videos directory:  `/Users/casey/my_vids`
 
-If you want to build the image locally (maybe because you have specific modifications you need)  run the following command:
+Outputs directory:  `/Users/casey/visaids`
 
+Suppose the video you want to analyze is called `video1.mp4`.
+
+Then, to create a visaid, run this command (substituting in the names of your directories):
 ```
-docker build -t bake-swt-visaid -f Containerfile .
+docker run --rm -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output ghcr.io/clamsproject/bake-swt-visaid:latest video1.mp4
 ```
 
-> [!NOTE]
-> The image spec file name is (unconventionally) `Containerfile`, so you need to specify it with `-f` option.
- 
-This will build a local Docker image named `bake-swt-visaid` (or `bake-swt-visaid:latest` in full name with the "tag", they are synonymous). We will use this name in the following steps.
+If your machine has a GPU with CUDA, you can add `--gpus all` to the Docker options to yield:
+```
+docker run --rm --gpus all -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output ghcr.io/clamsproject/bake-swt-visaid:latest video1.mp4
+```
 
-# Usage
+If you want to use one of the preset profiles, e.g., "fast-messy", you can add `-c fast-messy` to the container options (and now omitting GPU options), to yield:
+```
+docker run --rm -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output ghcr.io/clamsproject/bake-swt-visaid:latest -c fast-messy video1.mp4
+```
 
-## Running the Container
+# General usage
 
-In general, to run a docker container, the command format is: 
+In general, to run a Docker image in a container, the command format is: 
 ```
 docker run [options for docker-run] <image-name> [options for the main command of the container]
 ```
 
-To run this bake container, specifically, one needs to use (at least) two or three mount options (`-v xxx:yyy`), as in:
+To run this specific Docker image, one needs to use (at least) two or three mount options (`-v xxx:yyy`), as in:
 ```
 docker run --rm -v /path/to/data:/data -v /path/to/output:/output -v /path/to/config:/config bake-swt-visaid:latest [options] <input_files_or_directories>
 ```
@@ -63,6 +66,7 @@ docker run --rm -v /path/to/data:/data -v /path/to/output:/output -v /path/to/co
 - `[options]` part after the image name is configuring the baked pipeline itself. 
 - And last (but not definitely least), the `<input_files_or_directories>` part is the (space-separated) list of input files or directories to process. If a directory is provided, all files with the specified video extensions (by `-x` option, see below) will be processed
 
+
 # Configuration
 
 There are two parts one can configure when running the docker-run command: 
@@ -70,7 +74,7 @@ There are two parts one can configure when running the docker-run command:
 ## Configuing the baked pipeline 
 This is the `[options]` part of the above example command. Available options are: 
 
-- `-h` : display this help message
+- `-h` : display a help message
 - `-c config_name` : specify the configuration file to use
 - `-n` : do not output intermediate MMIF files
 - `-x video_extensions` : specify a comma-separated list of extensions
@@ -84,7 +88,6 @@ This is the `[options]` part of the above example command. Available options are
 > docker run run -it --entrypoint "" bake_image_name ffmpeg -codecs
 > ```
 > What's important here is the `--entrypoint ""` option, which disables the default command to run and run `ffmpeg ...` instead.
-
 
 ## Configuring individual elements in the pipeline
 
@@ -100,6 +103,16 @@ to use `fast-messy` preset.
 > [!NOTE]
 > If you don't use `-c` option at all, the `default` preset will be used.
 
+The available presets can glossed as follows:
+- `default`: Reasonable compromise between speed and accuracy.
+- `max-accuracy`:  Slowest, best known accuracy settings.  (~0.4x speed of `default`)
+- `fast-messy`:  Fast, imprecise, but still usable. (~2.5x speed of `default`)
+- `single-bin`:  Detects scenes with text, but does not distinguish between different types of scenes. (~1.3x speed of `default`)
+- `just-sample`:  Does not use scene identification; just creates a visaid via periodic sampling. (~5x speed of default)
+
+*Note that the relative speeds are estimates and, in practice, depend on characteristics of the input video.  The estimate assume use of a GPU.  The multipliers will exagerated, increased by a factor of 2 or more, if processing is done only with a CPU.*
+
+
 ### Using custom configuration
 If you want to use a custom configuration, you need to 
 1. create a JSON file with the configuration parameters
@@ -114,7 +127,28 @@ with this `-c custom_config` option, it will look for `custom_config.json` file 
 > [!WARNING]
 > If your custom file in `/config` directory has the same name as one of the presets, the custom file will take precedence over the preset file.
 
-#### Configuration File Format
+
+# Advanced setup and configuration
+
+## Building the docker image
+
+If you want to build the image locally (maybe because you have specific modifications you need)  run the following command:
+
+```
+docker build -t bake-swt-visaid -f Containerfile .
+```
+
+> [!NOTE]
+> The image spec file name is (unconventionally) `Containerfile`, so you need to specify it with `-f` option.
+ 
+This will build a local Docker image named `bake-swt-visaid` (or `bake-swt-visaid:latest` in full name with the "tag", they are synonymous). 
+
+Within the container, the `run.sh` script is the main entry point for running the processing pipeline.
+
+See [the container specification](Containerfile#L2-L3) for the exact versions of the tools used.
+
+
+## Configuration File Format
 The JSON must have two keys; `swt_params` and `visaid_params`. These keys should contain the parameters for the `swt-detection` and `visaid_builder` tools, respectively.
 
 ```json
@@ -140,6 +174,9 @@ For the `visaid_builder` tool, the customizable parameters are documented [insid
 > [!NOTE]
 > The URL to the source code can change when another version (commit) is used for the prebaked image.
 
-#### Example Configuration
+### Example Configuration
 
 See [`presets/default.json`](presets/default.json) for an example configuration file.
+
+
+
