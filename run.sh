@@ -108,16 +108,17 @@ echo "Using config file: $confname"
 
 function process_video {
     vname=$(basename $1)
+    vname=${vname%.*}
     local swt_conf=() ; while read -r line ; do swt_conf+=("$line") ;done <<< $(prep_swt_params $confname)
     visaid_conf_file=$(prep_visaid_params $confname)
     set -x
-    clams source video:"$1" | $swt_py $swt_dir/cli.py "${swt_conf[@]}" -- > $output_dir/$vname.$swt_suffix
-    $visaid_py $visaid_dir/use_swt.py $output_dir/$vname.$swt_suffix -vsc $visaid_conf_file > $output_dir/$vname.$visaid_suffix
+    clams source video:"$1" | $swt_py $swt_dir/cli.py "${swt_conf[@]}" -- > $output_dir/${vname}_$swt_suffix
+    $visaid_py $visaid_dir/use_swt.py $output_dir/${vname}_$swt_suffix -vsc $visaid_conf_file > $output_dir/${vname}_$visaid_suffix
     set +x
     # delete swt output if no_mmif is set
     if [ $no_mmif -eq 1 ]; then
         set -x
-        rm $output_dir/$vname.$swt_suffix
+        rm $output_dir/${vname}_$swt_suffix
         set +x
     fi
 }
