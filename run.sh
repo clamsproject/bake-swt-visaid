@@ -60,6 +60,18 @@ function prep_swt_params {
         jq -r '. | .swt_params | to_entries | reduce .[] as $ent ([] ;. + ["--\($ent.key)", ($ent.value | if type == "array" then (. | map(tostring)[] ) else tostring end)]) | .[]'
 }
 
+function usage {
+    echo "Usage: run.sh [-c config_name] [input_file_or_dir ...]"
+    echo "Options:"
+    echo "  -h                  : display this help message"
+    echo "  -c config_name      : specify the configuration file to use"
+    echo "  -n                  : do not output intermediate MMIF files"
+    echo "  -x video_extensions : specify a comma-separated list of extensions"
+    echo "[input_file_or_dir]   : one or more input files or directories to process"
+    echo "  If a directory is provided, all files with the specified video extensions (by -x option) will be processed"
+    exit 1
+    
+}
 
 # getopts to get an argument for config name with `c` or ``config` flag
 # all other arguments are treated as positional ones for target input files or directories
@@ -78,7 +90,7 @@ while getopts $OPTSTRING opt; do
             vid_exts=$OPTARG
             ;;
         h)
-            help
+            usage
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -91,18 +103,6 @@ while getopts $OPTSTRING opt; do
     esac
 done
 shift $((OPTIND -1))
-
-function help {
-    echo "Usage: run.sh [-c config_name] [input_file_or_dir ...]"
-    echo "Options:"
-    echo "  -c config_name: specify the configuration file to use"
-    echo "  -n: do not output intermediate MMIF files"
-    echo "  input_file_or_dir: a list of input files or directories to process"
-    echo "  If a directory is provided, all files with extensions specified in the vid_exts variable will be processed"
-    echo "  If no input files or directories are provided, the default configuration will be used to process all files in the data directory"
-    exit 1
-    
-}
 
 echo "Using config file: $confname"
 

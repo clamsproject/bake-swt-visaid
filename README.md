@@ -1,71 +1,110 @@
-# README
+# Overview
 
-## Overview
-
-This project provides a Docker container setup for processing video files using 
+This project provides a software package for processing video files using 
 1. [`swt-detection`](https://apps.clams.ai/#swt-detection) CLAMS app
-2. visual aids with `visaid_builder`. The `run.sh` script is the main entry point for running the processing pipeline.
+2. visual aids with `visaid_builder`. 
+
+to detect _scenes-with-text_ and generate visualization of the detected scenes.
+
+The `run.sh` script is the main entry point for running the processing pipeline.
 
 See [the container specification](Containerfile#L2-L3) for the exact versions of the tools used.
 
-## Prerequisites
+# Prerequisites
 
-- container runtime (e.g., Docker or Podman). For this guide, we will assume `docker` command is being used.
-- `bash` shell (For Windows users, [WSL](https://learn.microsoft.com/en-us/windows/wsl/) is recommended to obtain a bash shell.)
+- container runtime (e.g., [Docker](https://www.docker.com/) or [Podman](https://podman.io/)). For this guide, we will assume `docker` command is being used.
+- `bash` shell (For Windows users, [WSL](https://learn.microsoft.com/en-us/windows/wsl/) is recommended to obtain a `bash` shell.)
 
-## Usage
+> [!NOTE]
+> TODO: add "# quick start" as a part of https://github.com/clamsproject/bake-swt-visaid/issues/5
 
-### Building the Docker Image
+# Setup
 
-To build the Docker image, run the following command:
-
-```
-docker build -t video-processor .
-```
-This will build a local Docker image named `video-processor`. We will use this name in the following steps.
-
-### Running the Container
-
-To run the container, use the following command:
+## Downloading prebuilt image
+Simply pull from our package repository available at GtiHub Container Registry (ghcr):
 
 ```
-docker run --rm -v /path/to/data:/data -v /path/to/output:/output -v /path/to/config:/config video-processor [options] [input_files_or_directories]
+docker pull ghcr.io/clamsproject/bake-swt-visaid:latest
 ```
 
-### Mounts
+and you're ready to go. See the [Usage](#usage) section for how to use the package. 
 
-At least two mounts are required:
+## Building the docker image
 
-- `/data`: Directory containing input video files
-- `/output`: Directory to store output files
-
-Then mount the directory containing the custom configuration file(s) to `/config`. See below for more information on configuration.
-
-
-### Environment Variables
-
-The following environment variables can be overridden:
-
-- `data_dir`: Directory containing input video files (default: `/data`)
-- `output_dir`: Directory to store output files (default: `/output`)
-- `config_user_dir`: Directory containing user configuration files (default: `/config`)
-- `vid_exts`: Video file extensions to process (default: `mp4 mkv avi`), separated by spaces. Only applies when input is a directory.
-
-If necessary, use the [`-e` option](https://docs.docker.com/reference/cli/docker/container/run/#env) to set these environment variables. For example:
+If you want to build the image locally (maybe because you have specific modifications you need)  run the following command:
 
 ```
-docker run --rm -v /path/to/data:/data -v /path/to/output:/output -e vid_exts="mp4" video-processor a_sub_dir
+docker build -t bake-swt-visaid -f Containerfile .
 ```
 
-This command will process all `.mp4` files in the `/path/to/data/a_sub_dir` directory, and store the output in `/path/to/output`.
+> [!NOTE]
+> The image spec file name is (unconventionally) `Containerfile`, so you need to specify it with `-f` option.
+ 
+This will build a local Docker image named `bake-swt-visaid` (or `bake-swt-visaid:latest` in full name with the "tag", they are synonymous). We will use this name in the following steps.
 
-### Configuration
+# Usage
 
-Configuration can be passed as a single JSON file using the `-c` option. For example:
+## Running the Container
+
+In general, to run a docker container, the command format is: 
+```
+docker run [options for docker-run] <image-name> [options for the main command of the container]
+```
+
+To run this bake container, specifically, one needs to use (at least) two or three mount options (`-v xxx:yyy`), as in:
+```
+docker run --rm -v /path/to/data:/data -v /path/to/output:/output -v /path/to/config:/config bake-swt-visaid:latest [options] <input_files_or_directories>
+```
+
+- `-v xxx:yyy` parts are for "mounting" parts of file system to the container to share files between the host computer (`xxx` directory) and the container ("shown" as `yyy` inside the virtual machine). Two mounts are required:
+    - `/data`: Directory containing input video files
+    - `/output`: Directory to store output files
+    - Then (optionally) mount the third directory containing the custom configuration file(s) to `/config`. See below for more information on configuration.
+- `[options]` part after the image name is configuring the baked pipeline itself. 
+- And last (but not definitely least), the `<input_files_or_directories>` part is the (space-separated) list of input files or directories to process. If a directory is provided, all files with the specified video extensions (by `-x` option, see below) will be processed
+
+# Configuration
+
+There are two parts one can configure when running the docker-run command: 
+
+## Configuing the baked pipeline 
+This is the `[options]` part of the above example command. Available options are: 
+
+- `-h` : display this help message
+- `-c config_name` : specify the configuration file to use
+- `-n` : do not output intermediate MMIF files
+- `-x video_extensions` : specify a comma-separated list of extensions
+
+> [!NOTE]
+> All options are optional. If not specified, the default values will be used.
+
+## Configuring individual elements in the pipeline
+
+This can be done by passing a configuration file name using `-c` option. We provide some configuration presets in the [`presets`](presets) directory. 
+
+### Using presets
+Simply pass a preset name (without the `.json` extension) to the `-c` option. For example:
+```
+docker run [options for docker-run] bake-swt-visaid:latest -c fast-messy input_video.mp4
+```
+to use `fast-messy` preset. 
+
+> [!NOTE]
+> If you don't use `-c` option at all, the `default` preset will be used.
+
+### Using custom configuration
+If you want to use a custom configuration, you need to 
+1. create a JSON file with the configuration parameters
+2. put the file in a directory that will be mounted to `/config` in the container
+3. pass the file name (without the `.json` extension) to the `-c` option. For example, 
+
 ``` 
-docker run <docker options> video-processor -c custom_config input_video.mp4
+docker run [options for docker-run] -v /some/host/directory:/config bake-swt-visaid:latest -c custom_config input_video.mp4
 ```
-with this `-c custom_config` option, it will look for `custom_config.json` file under `/config` and `/presets` directories (in that order) inside the container. Make sure your configuration file is placed under the directory that's mounted to `/config`.
+with this `-c custom_config` option, it will look for `custom_config.json` file under `/config` inside the container, which is mapped from `/some/host/directory/custom_config.json` file in the host computer. It's important to make sure your configuration file is properly placed under the directory that's mounted to `/config`.
+
+> [!WARNING]
+> If your custom file in `/config` directory has the same name as one of the presets, the custom file will take precedence over the preset file.
 
 #### Configuration File Format
 The JSON must have two keys; `swt_params` and `visaid_params`. These keys should contain the parameters for the `swt-detection` and `visaid_builder` tools, respectively.
@@ -96,4 +135,3 @@ For the `visaid_builder` tool, the customizable parameters are documented [insid
 #### Example Configuration
 
 See [`presets/default.json`](presets/default.json) for an example configuration file.
-
