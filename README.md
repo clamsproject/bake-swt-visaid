@@ -19,6 +19,22 @@ We will also assume use of a `bash` shell, as available in Linux distributions, 
 
 # Quick start
 
+Create a new folder, then create a folder named `data` under it. Then open bash and `cd` to the folder you created (the parent of `data`). Run the following command. 
+
+```bash
+wget -O- https://raw.githubusercontent.com/clamsproject/bake-swt-visaid/refs/heads/main/quickstart.sh | sh
+```
+
+> [!WARNING]
+> The `swt` component using deep neural net models, so it can take a fairly long time to process a number of videos. 
+> Generally, you can "break" a command by pressing `Ctrl-C` and stop the processing, but starting the processing with the above command will NOT take `Ctrl-C` key combo and just ignore them. 
+> To stop the processing, open a new bash shell (terminal) and run the following command:
+> ```bash 
+> docker stop $(docker ps | grep bake- | cut -d' ' -f1)
+> ```
+
+# Quick start for techies
+
 You need to acquire the Docker image. To pull the most recent version from our package repository available at GtiHub Container Registry (ghcr), run 
 ```
 docker pull ghcr.io/clamsproject/bake-swt-visaid:latest
