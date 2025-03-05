@@ -6,7 +6,7 @@ The sofware is packaged as a Docker image that combines two pieces of software:
 1. The [`swt-detection`](https://apps.clams.ai/#swt-detection) CLAMS app
 2. The [`visaid_builder`](https://github.com/WGBH-MLA/visaid_builder) Python module
 
-A visaid is a simple, portalble HTML document displaying thumbnail images of key scenes from a video. Its purpose is to provide a visual index for overview and navigation. The following image is from [an example visaid](/examples/cpb-aacip-b45eb62bd60_visaid.html) for [an item in the American Archive of Public Broadcasting](https://americanarchive.org/catalog/cpb-aacip-b45eb62bd60).
+A visaid is a simple, portable HTML document displaying thumbnail images of key scenes from a video. Its purpose is to provide a visual index for overview and navigation. The following image is from [an example visaid](/examples/cpb-aacip-b45eb62bd60_visaid.html) for [an item in the American Archive of Public Broadcasting](https://americanarchive.org/catalog/cpb-aacip-b45eb62bd60).
 
 ![Screenshot of an example visaid](/examples/visaid_example_screenshot.png)
 *Screenshot from an example visaid*
@@ -24,7 +24,7 @@ You need to acquire the Docker image. To pull the most recent version from our p
 docker pull ghcr.io/clamsproject/bake-swt-visaid:latest
 ```
 
-Then, you need to identify two directories: a directory containing your input video files and a directory that will contain the visaid output. For example, suppose the following directories:
+Then, you need to identify two directories: **a directory containing input video files** and a **directory for the visaid output**. For example, suppose the following directories:
 
 Videos directory: `/Users/casey/my_vids`
 
@@ -38,19 +38,19 @@ Then, to create a visaid, run this command (substituting in the names of your di
 docker run --rm -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output ghcr.io/clamsproject/bake-swt-visaid:latest video1.mp4
 ```
 
-The terminal output should look like this:
+The terminal output should look similar to this:
 
 ```
 Using config file: /presets/default.json
-+ clams source video:/data/cpb-aacip-507-z31ng4hp5t.part.mp4
++ clams source video:/data/video1.mp4
 + python3 /app/cli.py --pretty true --tpUsePosModel true --tpModelName convnext_small --tpStartAt 0 --tpStopAt 9000000 --tpSampleRate 250 --tfMinTPScore 0.05 --tfMinTFScore 0.25 --tfMinTFDuration 1900 --tfAllowOverlap false --tfLabelMapPreset nopreset --tfLabelMap B:bars S:slate I:chyron Y:chyron N:chyron 'M:main title' 'F:filmed text' C:credits R:credits 'O:other text' 'L:other text' 'E:other text' 'U:other text' 'K:other text' 'G:other text' 'T:other text' --
-+ /visaid_builder-60cfadf67614251c215198a119a7dafc739a16de/.venv/bin/python3 /visaid_builder-60cfadf67614251c215198a119a7dafc739a16de/use_swt.py /output/cpb-aacip-507-z31ng4hp5t.part_swt.mmif -vsc /tmp/visaid_params.1740685660.json
++ /visaid_builder-60cfadf67614251c215198a119a7dafc739a16de/.venv/bin/python3 /visaid_builder-60cfadf67614251c215198a119a7dafc739a16de/use_swt.py /output/video1_swt.mmif -vsc /tmp/visaid_params.1740685660.json
 + set +x
 ```
 
-Do not expect immediate results. Running this on a 4-minute video (of about 12Mb) will take about 2 minutes on a reasonable laptop.
+Do not expect immediate results. Running this command on a 30-minute video may take 10-15 minutes (on a reasonably capable laptop without a GPU).
 
-If your machine has a GPU with CUDA, you can add `--gpus all` to the Docker options to yield:
+If your machine has a GPU with CUDA, you expect a speed up of 2x or more.  Add `--gpus all` to the Docker options to yield:
 
 ```
 docker run --rm --gpus all -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output ghcr.io/clamsproject/bake-swt-visaid:latest video1.mp4
@@ -70,7 +70,7 @@ In general, to run a Docker image in a container, the command format is:
 docker run [options for docker-run] <image-name> [options for the main command of the container]
 ```
 
-To run this specific Docker image, one needs to use two or three mount options (`-v xxx:yyy`), as in:
+To run the `bake-swt-visaid` Docker image, one needs two or three mount options (`-v xxx:yyy`), as in:
 
 ```
 docker run --rm -v /path/to/data:/data -v /path/to/output:/output -v /path/to/config:/config bake-swt-visaid:latest [options] <input_files_or_directories>
@@ -201,5 +201,9 @@ For the `visaid_builder` tool, the customizable parameters are documented [insid
 
 See [`presets/default.json`](presets/default.json) for an example configuration file.
 
+# Known issues and limitations
 
+The `swt-detection` CLAMS app uses an image classifier trained on stills from television programs in the [American Archive of Public Broadcasting](https://americanarchive.org/), especially public TV shows shot in a 4:3 aspect ratio, from the 1970s to the early 2000s.  You can expect the best results when applying this tool to videos that are visually similar to videos in the training data.
+
+Development of this project, including the classifier, is ongoing.  We expect future releases to employ increasingly capable and efficient computer vision models.
 
