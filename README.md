@@ -2,7 +2,7 @@
 
 This is a software package to analyze digital videos, to detect _scenes with text_ and create visual indexes ("visaids") showing those scenes.
 
-The sofware is packaged as a Docker image that combines two pieces of software:
+The software is packaged as a Docker image that combines two pieces of software:
 1. The [`swt-detection`](https://apps.clams.ai/#swt-detection) CLAMS app
 2. The [`visaid_builder`](https://github.com/WGBH-MLA/visaid_builder) Python module
 
