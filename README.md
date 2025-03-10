@@ -2,11 +2,11 @@
 
 This is a software package to analyze digital videos, to detect _scenes with text_ and create visual indexes ("visaids") showing those scenes.
 
-The sofware is packaged as a Docker image that combines two pieces of software:
+The software is packaged as a Docker image that combines two pieces of software:
 1. The [`swt-detection`](https://apps.clams.ai/#swt-detection) CLAMS app
 2. The [`visaid_builder`](https://github.com/WGBH-MLA/visaid_builder) Python module
 
-A visaid is a simple, portalble HTML document displaying thumbnail images of key scenes from a video. Its purpose is to provide visual index for overview and navigation. The following image is from [an example visaid](/examples/cpb-aacip-b45eb62bd60_visaid.html) for [an item in the American Archive of Public Broadcasting](https://americanarchive.org/catalog/cpb-aacip-b45eb62bd60).
+A visaid is a simple, portable HTML document displaying thumbnail images of key scenes from a video. Its purpose is to provide a visual index for overview and navigation. The following image is from [an example visaid](/examples/cpb-aacip-b45eb62bd60_visaid.html) for [an item in the American Archive of Public Broadcasting](https://americanarchive.org/catalog/cpb-aacip-b45eb62bd60).
 
 ![Screenshot of an example visaid](/examples/visaid_example_screenshot.png)
 *Screenshot from an example visaid*
@@ -19,30 +19,45 @@ We will also assume use of a `bash` shell, as available in Linux distributions, 
 
 # Quick start
 
-You need to acquire the Docker image. To pull the most recent version from our package repository available at GtiHub Container Registry (ghcr), run 
+You need to acquire the Docker image. To pull the most recent version from our package repository available at GitHub Container Registry (ghcr), run 
 ```
 docker pull ghcr.io/clamsproject/bake-swt-visaid:latest
 ```
 
-Then, you need to identify two directories: a directory containing your input video files and your directory that will contain the visaid output. For example, suppose the following directories:
+Then, you need to identify two directories: **a directory containing input video files** and a **directory for the visaid output**. For example, suppose the following directories:
 
 Videos directory: `/Users/casey/my_vids`
 
 Outputs directory: `/Users/casey/visaids`
 
-Suppose the video you want to analyze is called `video1.mp4`.
+And suppose that the video you want to analyze is called `video1.mp4`.
 
-Then, to create a visaid, run this command (substituting in the names of your directories):
+Then, to create a visaid, run this command (substituting in the names of your directories and your video file):
+
 ```
 docker run --rm -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output ghcr.io/clamsproject/bake-swt-visaid:latest video1.mp4
 ```
 
-If your machine has a GPU with CUDA, you can add `--gpus all` to the Docker options to yield:
+The terminal output should look similar to this:
+
+```
+Using config file: /presets/default.json
++ clams source video:/data/video1.mp4
++ python3 /app/cli.py --pretty true --tpUsePosModel true --tpModelName convnext_small --tpStartAt 0 --tpStopAt 9000000 --tpSampleRate 250 --tfMinTPScore 0.05 --tfMinTFScore 0.25 --tfMinTFDuration 1900 --tfAllowOverlap false --tfLabelMapPreset nopreset --tfLabelMap B:bars S:slate I:chyron Y:chyron N:chyron 'M:main title' 'F:filmed text' C:credits R:credits 'O:other text' 'L:other text' 'E:other text' 'U:other text' 'K:other text' 'G:other text' 'T:other text' --
++ /visaid_builder-60cfadf67614251c215198a119a7dafc739a16de/.venv/bin/python3 /visaid_builder-60cfadf67614251c215198a119a7dafc739a16de/use_swt.py /output/video1_swt.mmif -vsc /tmp/visaid_params.1740685660.json
++ set +x
+```
+
+Do not expect immediate results. Running this command on a 30-minute video may take 10-15 minutes (on a reasonably capable laptop without a GPU).
+
+If your machine has a GPU with CUDA, you expect a speed up of 2x or more.  Add `--gpus all` to the Docker options to yield:
+
 ```
 docker run --rm --gpus all -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output ghcr.io/clamsproject/bake-swt-visaid:latest video1.mp4
 ```
 
 If you want to use one of the preset profiles, e.g., "fast-messy", you can add `-c fast-messy` to the container options (and now omitting GPU options), to yield:
+
 ```
 docker run --rm -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output ghcr.io/clamsproject/bake-swt-visaid:latest -c fast-messy video1.mp4
 ```
@@ -50,20 +65,22 @@ docker run --rm -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output gh
 # General usage
 
 In general, to run a Docker image in a container, the command format is: 
+
 ```
 docker run [options for docker-run] <image-name> [options for the main command of the container]
 ```
 
-To run this specific Docker image, one needs to use (at least) two or three mount options (`-v xxx:yyy`), as in:
+To run the `bake-swt-visaid` Docker image, one needs two or three mount options (`-v xxx:yyy`), as in:
+
 ```
 docker run --rm -v /path/to/data:/data -v /path/to/output:/output -v /path/to/config:/config bake-swt-visaid:latest [options] <input_files_or_directories>
 ```
 
-- `-v xxx:yyy` parts are for "mounting" partial file system to the container to share files between the host computer (`xxx` directory) and the container ("shown" as `yyy` inside the virtual machine). Two mounts are required:
+- The `-v xxx:yyy` parts are for "mounting" partial file system to the container to share files between the host computer (`xxx` directory) and the container ("shown" as `yyy` inside the virtual machine). Two mounts are required:
     - `/data`: Directory containing input video files
     - `/output`: Directory to store output files
     - Then (optionally) mount the third directory containing the custom configuration file(s) to `/config`. See below for more information on configuration.
-- `[options]` part after the image name is configuring the baked pipeline itself. 
+- The `[options]` part after the image name is configuring the baked pipeline itself. 
 - And last (but not definitely least), the `<input_files_or_directories>` part is the (space-separated) list of input files or directories to process. If a directory is provided, all files with the specified video extensions (by `-x` option, see below) will be processed
 
 
@@ -71,7 +88,8 @@ docker run --rm -v /path/to/data:/data -v /path/to/output:/output -v /path/to/co
 
 There are two parts one can configure when running the docker-run command: 
 
-## Configuing the baked pipeline 
+## Configuring the baked pipeline 
+
 This is the `[options]` part of the above example command. Available options are: 
 
 - `-h` : display a help message and exit (do not use with other options)
@@ -83,24 +101,27 @@ This is the `[options]` part of the above example command. Available options are
 > All options are optional. If not specified, the default values will be used.
 
 > [!NOTE]
-> To handle video files, `ffmpeg` installed inside the container (which is likely different from the `ffmpeg` on the host computer if already installed) is used. To see information about the `ffmpeg` installation, for example to list up the available codecs, you can run the following command:
+> To handle video files, `ffmpeg` is installed inside the container (which is likely different from the `ffmpeg` on the host computer if already installed). To see information about the `ffmpeg` installation, for example to list up the available codecs, you can run the following command:
 > ```
 > docker run run -it --entrypoint "" bake_image_name ffmpeg -codecs
 > ```
 > What's important here is the `--entrypoint ""` option, which disables the default command to run and run `ffmpeg ...` instead.
+
 
 ## Configuring individual elements in the pipeline
 
 This can be done by passing a configuration file name using `-c` option. We provide some configuration presets in the [`presets`](presets) directory. 
 
 ### Using presets
-Simply pass a preset name (without the `.json` extension) to the `-c` option. For example:
+
+Simply pass a preset name (without the `.json` extension) to the `-c` option. For example, to use the `fast-messy` preset:
+
 ```
 docker run [options for docker-run] bake-swt-visaid:latest -c fast-messy input_video.mp4
-```
-to use `fast-messy` preset. 
+``` 
 
 The available presets can be glossed as follows:
+
 - `default`: Reasonable compromise between speed and accuracy. Will be use when `-c` option is absent.
 - `max-accuracy`: Slowest, best known accuracy settings. (~0.4x speed of `default`)
 - `fast-messy`: Fast, imprecise, but still usable. (~2.5x speed of `default`)
@@ -112,7 +133,9 @@ The available presets can be glossed as follows:
 
 
 ### Using custom configuration
+
 If you want to use a custom configuration, you need to 
+
 1. create a JSON file with the configuration parameters
 2. put the file in a directory that will be mounted to `/config` in the container
 3. pass the file name (without the `.json` extension) to the `-c` option. For example, 
@@ -178,5 +201,9 @@ For the `visaid_builder` tool, the customizable parameters are documented [insid
 
 See [`presets/default.json`](presets/default.json) for an example configuration file.
 
+# Known issues and limitations
 
+The `swt-detection` CLAMS app uses an image classifier trained on stills from television programs in the [American Archive of Public Broadcasting](https://americanarchive.org/), especially public TV shows shot in a 4:3 aspect ratio, from the 1970s to the early 2000s.  You can expect the best results when applying this tool to videos that are visually similar to videos in the training data.
+
+Development of this project, including the classifier, is ongoing.  We expect future releases to employ increasingly capable and efficient computer vision models.
 
