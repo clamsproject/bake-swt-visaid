@@ -7,8 +7,8 @@
       "tpStopAt": 9000000,
       "tpSampleRate": 250,
       "tfMinTPScore": 0.05,
-      "tfMinTFScore": 0.25,
-      "tfMinTFDuration": 1900,
+      "tfMinTFScore": 0.12,
+      "tfMinTFDuration": 2650,
       "tfAllowOverlap": false,
       "tfLabelMapPreset": "nopreset",
       "tfLabelMap": [
@@ -43,8 +43,8 @@
         "filmed text": 30100,
         "credits": 1900 },
       "default_subsampling": 60100,
-      "include_first_time": false,
-      "include_final_time": false,
+      "include_first_time": true,
+      "include_final_time": true,
       "display_video_duration": true,
       "display_image_ms": false,
       "aapb_timecode_link": false

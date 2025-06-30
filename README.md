@@ -123,7 +123,6 @@ docker run [options for docker-run] bake-swt-visaid:latest -c fast-messy input_v
 The available presets can be glossed as follows:
 
 - `default`: Reasonable compromise between speed and accuracy. Will be use when `-c` option is absent.
-- `max-accuracy`: Slowest, best known accuracy settings. (~0.4x speed of `default`)
 - `fast-messy`: Fast, imprecise, but still usable. (~2.5x speed of `default`)
 - `single-bin`: Detects scenes with text, but does not distinguish between different types of scenes. (~1.3x speed of `default`)
 - `just-sample`: Does not use scene identification; just creates a visaid via periodic sampling. (~5x speed of default)
