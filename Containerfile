@@ -1,6 +1,6 @@
 # Use a base image as the base
-FROM ghcr.io/clamsproject/app-swt-detection:v7.5
-ENV visaid_build_version=60cfadf67614251c215198a119a7dafc739a16de
+FROM ghcr.io/clamsproject/app-swt-detection:v7.6
+ENV visaid_build_version=b5c7eb13d52366d314a2812d57f2bc00180df67e
 # default subdirectory inside the zip file downloaded from github 
 ENV visaid_dir=/visaid_builder-$visaid_build_version
 
