@@ -2,7 +2,8 @@
   "swt_params": {
       "pretty": true,
       "tpUsePosModel": true,
-      "tpModelName": "convnext_tiny",
+      "tpModelName": "convnextv2_tiny",
+      "tpModelBatchSize": 20,
       "tpStartAt": 0,
       "tpStopAt": 9000000,
       "tpSampleRate": 250,
@@ -13,20 +14,14 @@
       "tfLabelMapPreset": "nopreset",
       "tfLabelMap": [
         "S:scene with text",
-        "I:scene with text",
+        "IN:scene with text",
         "Y:scene with text",
-        "N:scene with text",
-        "M:scene with text",
-        "F:scene with text",
-        "C:scene with text",
-        "R:scene with text",
-        "O:scene with text",
-        "L:scene with text",
+        "KU:scene with text",
         "E:scene with text",
-        "U:scene with text",
-        "K:scene with text",
-        "G:scene with text",
-        "T:scene with text"
+        "F:scene with text",
+        "M:scene with text",
+        "GLOTW:scene with text",
+        "CR:scene with text"
         ]
   },
   "visaid_params": {
