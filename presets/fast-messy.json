@@ -2,7 +2,8 @@
   "swt_params": {
       "pretty": true,
       "tpUsePosModel": true,
-      "tpModelName": "convnext_tiny",
+      "tpModelName": "convnextv2_tiny",
+      "tpModelBatchSize": 20,
       "tpStartAt": 0,
       "tpStopAt": 9000000,
       "tpSampleRate": 750,
@@ -14,20 +15,14 @@
       "tfLabelMap": [
         "B:bars",
         "S:slate",
-        "I:chyron",
+        "IN:chyron",
         "Y:chyron",
-        "N:chyron",
         "F:filmed text",
-        "C:credits",
-        "R:credits",
+        "CR:credits",
         "M:other text",
-        "O:other text",
-        "L:other text",
+        "GLOTW:other text",
         "E:other text",
-        "U:other text",
-        "K:other text",
-        "G:other text",
-        "T:other text"
+        "KU:other text"
         ]
     },
   "visaid_params": {

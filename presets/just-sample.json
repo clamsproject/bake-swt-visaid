@@ -1,7 +1,7 @@
 {
   "swt_params": {
       "pretty": true,
-      "tpModelName": "convnext_tiny",
+      "tpModelName": "convnextv2_tiny",
       "tpSampleRate": 25000,
       "tfMinTPScore": 1.0,
       "tfMinTFScore": 1.0,
