@@ -11,8 +11,8 @@ config_preset_dir=${config_preset_dir:-/presets}
 swt_dir=${swt_dir:-/app}
 swt_py=python3
 swt_suffix=${swt_suffix:-swt.mmif}
-visaid_dir=${visaid_dir:-/visaid_builder-main}
-visaid_py=${visaid_py:-$visaid_dir/.venv/bin/python3}
+visaid_dir=${visaid_dir:-/visaid_builder}
+visswt=${visswt:-$visaid_dir/.venv/bin/visswt}
 visaid_suffix=${visaid_suffix:-visaid.html}
 no_mmif=${no_mmif:-0}
 
@@ -50,7 +50,7 @@ function locate_config_file {
 function prep_visaid_params {
     # jq config file ($1) and grab the visaid_params object and dump to a tmp file using a random name to avoid being reused, return the path
     tmpfname=/tmp/visaid_params.$(date +%s).json
-    cat $1 | jq -r '.visaid_params' > $tmpfname
+    cat $1 | jq -r '.visaid_params // {}' > $tmpfname
     echo $tmpfname
 }
 
@@ -114,7 +114,7 @@ function process_video {
     visaid_conf_file=$(prep_visaid_params $confname)
     set -x
     clams source video:"$1" | $swt_py $swt_dir/cli.py "${swt_conf[@]}" -- > $output_dir/${vname}_$swt_suffix
-    $visaid_py $visaid_dir/use_swt.py $output_dir/${vname}_$swt_suffix -vsc $visaid_conf_file > $output_dir/${vname}_$visaid_suffix
+    $visswt $output_dir/${vname}_$swt_suffix -v -c $visaid_conf_file -o $output_dir/${vname}_$visaid_suffix
     set +x
     # delete swt output if no_mmif is set
     if [ $no_mmif -eq 1 ]; then
