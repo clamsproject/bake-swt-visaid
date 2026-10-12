@@ -58,15 +58,15 @@ The first time, Docker downloads the image. The download is large and can take s
 
 The script downloads the most recent version of the image, and then processes all videos in the `data` folder. When it completes, the `output` folder (next to `data`) contains a visaid (`<name>_visaid.html`) for each video. Open a visaid in a web browser to view it.
 
-Do not expect immediate results. See [below](#quick-start-for-techies) for the expected processing time.
+Do not expect immediate results. See [below](#getting-deeper) for the expected processing time.
 
-- To stop the processing, press `Ctrl-C`.
+- To stop the processing, press `Ctrl-C`. To continue later with the videos that do not have a visaid yet, run `sh quickstart.sh --skip`.
 - To use one of the preset profiles (see [Configuration](#configuration)), add the option to the command, as in `sh quickstart.sh -c fast-messy`.
 - To use a [custom configuration](#using-custom-configuration), put the file in the `config` folder that the script creates next to `data`, and give its name with the `-c` option.
 
 The script starts the `docker` command for you. The next section shows that command, for when you need more control (for example, videos and outputs in different locations, or use of a GPU).
 
-# Quick start for techies
+# Getting deeper
 
 You need to acquire the Docker image. To pull the most recent version from our package repository available at GitHub Container Registry (ghcr), run 
 ```
@@ -136,6 +136,8 @@ docker run --rm -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output gh
 - To process all videos in the mounted directory itself, use `.` as the input.
 - Output files are named after the input file (`<name>_visaid.html` and `<name>_swt.mmif`) and are all written directly to the output directory. Two input files with the same name in different directories write to the same output files.
 - Use the `-n` option if you do not need the MMIF files.
+- With the `--skip` option, a video that already has a visaid in the output directory is skipped, so you can stop a long run and continue it later.
+- When a video cannot be processed, the run continues with the next video. A list of the failed videos is printed at the end. For a video that failed in scene detection, the MMIF file is kept and contains the error.
 
 # General usage
 
@@ -170,6 +172,7 @@ This is the `[options]` part of the above example command. Available options are
 - `-h` : display a help message and exit (do not use with other options)
 - `-c config_name` : specify the configuration file to use (default is `default`, see below for what this configuration file is for)
 - `-n` : do not output intermediate MMIF files (default is to output)
+- `-s`, `--skip` : skip a video when its visaid already exists (default is to process it again)
 - `-x video_extensions` : specify a comma-separated list of extensions (default is `mp4,mkv,avi`)
 
 > [!NOTE]
