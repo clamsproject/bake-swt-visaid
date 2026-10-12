@@ -15,6 +15,8 @@ visaid_dir=${visaid_dir:-/visaid_builder}
 visswt=${visswt:-$visaid_dir/.venv/bin/visswt}
 visaid_suffix=${visaid_suffix:-visaid.html}
 no_mmif=${no_mmif:-0}
+skip=${skip:-0}
+failed=()
 
 function locate_config_file {
     # if $1 is an absolute path (starts with /), and exists, return it
@@ -66,6 +68,7 @@ function usage {
     echo "  -h                  : display this help message"
     echo "  -c config_name      : specify the configuration file to use"
     echo "  -n                  : do not output intermediate MMIF files"
+    echo "  -s, --skip          : skip a video when its visaid already exists"
     echo "  -x video_extensions : specify a comma-separated list of extensions"
     echo "[input_file_or_dir]   : one or more input files or directories to process"
     echo "  If a directory is provided, all files with the specified video extensions (by -x option) will be processed"
@@ -73,11 +76,21 @@ function usage {
     
 }
 
+# getopts handles short options only, so translate the long ones first
+args=()
+for arg in "$@"; do
+    case $arg in
+        --skip) args+=(-s) ;;
+        *) args+=("$arg") ;;
+    esac
+done
+set -- "${args[@]}"
+
 # getopts to get an argument for config name with `c` or ``config` flag
 # all other arguments are treated as positional ones for target input files or directories
 # if no config is provided, the default config (`default`) is used
 confname=$(locate_config_file default)
-OPTSTRING=":c:nx:h"
+OPTSTRING=":c:nsx:h"
 while getopts $OPTSTRING opt; do
     case $opt in
         c)
@@ -85,6 +98,9 @@ while getopts $OPTSTRING opt; do
             ;;
         n)
             no_mmif=1
+            ;;
+        s)
+            skip=1
             ;;
         x)
             vid_exts=$OPTARG
@@ -110,11 +126,28 @@ echo "Using config file: $confname"
 function process_video {
     vname=$(basename $1)
     vname=${vname%.*}
+    if [ $skip -eq 1 ] && [ -e $output_dir/${vname}_$visaid_suffix ]; then
+        echo "Skipping $1: $output_dir/${vname}_$visaid_suffix already exists"
+        return
+    fi
     local swt_conf=() ; while read -r line ; do swt_conf+=("$line") ;done <<< $(prep_swt_params $confname)
     visaid_conf_file=$(prep_visaid_params $confname)
+    # the MMIF file of a failed video is kept, because it records the error
     set -x
-    clams source video:"$1" | $swt_py $swt_dir/cli.py "${swt_conf[@]}" -- > $output_dir/${vname}_$swt_suffix
-    $visswt $output_dir/${vname}_$swt_suffix -v -c $visaid_conf_file -o $output_dir/${vname}_$visaid_suffix
+    if ! clams source video:"$1" | $swt_py $swt_dir/cli.py "${swt_conf[@]}" -- > $output_dir/${vname}_$swt_suffix; then
+        set +x
+        echo "Error: scene detection failed for $1, see $output_dir/${vname}_$swt_suffix"
+        failed+=("$1")
+        return
+    fi
+    if ! $visswt $output_dir/${vname}_$swt_suffix -v -c $visaid_conf_file -o $output_dir/${vname}_$visaid_suffix; then
+        set +x
+        echo "Error: visaid creation failed for $1"
+        # an incomplete visaid must not make the next run skip this video
+        rm -f $output_dir/${vname}_$visaid_suffix
+        failed+=("$1")
+        return
+    fi
     set +x
     # delete swt output if no_mmif is set
     if [ $no_mmif -eq 1 ]; then
@@ -139,3 +172,9 @@ for arg in $@; do
         done
     fi
 done
+
+if [ ${#failed[@]} -gt 0 ]; then
+    echo "Failed to process ${#failed[@]} video(s):"
+    printf '  %s\n' "${failed[@]}"
+    exit 1
+fi

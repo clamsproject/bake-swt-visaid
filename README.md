@@ -19,7 +19,7 @@ We will also assume use of a `bash` shell, as available in Linux distributions, 
 
 # Before you start
 
-The container runtime is the only software you install. You do not need Python, and you do not need to download or clone this repository. The image that you pull in the [Quick start](#quick-start) contains the tools and all their dependencies.
+The container runtime is the only software you install. You do not need Python, and you do not need to download or clone this repository. The image that Docker downloads in the [Quick start](#quick-start) contains the tools and all their dependencies.
 
 ## Installing Docker Desktop on a Mac
 
@@ -44,6 +44,30 @@ The first time, Docker downloads the image. The download is large and can take s
 
 # Quick start
 
+1. Create a new folder, and a folder named `data` inside it.
+1. Put your videos in the `data` folder. For your first run, use one short video (a few minutes), so that you see a result quickly.
+1. Open a terminal and `cd` to the folder you created (the parent of `data`).
+1. Download the `quickstart.sh` script. You need to do this only once.
+    ```
+    curl -fsSLO https://raw.githubusercontent.com/clamsproject/bake-swt-visaid/main/quickstart.sh
+    ```
+1. Run the script.
+    ```
+    sh quickstart.sh
+    ```
+
+The script downloads the most recent version of the image, and then processes all videos in the `data` folder. When it completes, the `output` folder (next to `data`) contains a visaid (`<name>_visaid.html`) for each video. Open a visaid in a web browser to view it.
+
+Do not expect immediate results. See [below](#getting-deeper) for the expected processing time.
+
+- To stop the processing, press `Ctrl-C`. To continue later with the videos that do not have a visaid yet, run `sh quickstart.sh --skip`.
+- To use one of the preset profiles (see [Configuration](#configuration)), add the option to the command, as in `sh quickstart.sh -c fast-messy`.
+- To use a [custom configuration](#using-custom-configuration), put the file in the `config` folder that the script creates next to `data`, and give its name with the `-c` option.
+
+The script starts the `docker` command for you. The next section shows that command, for when you need more control (for example, videos and outputs in different locations, or use of a GPU).
+
+# Getting deeper
+
 You need to acquire the Docker image. To pull the most recent version from our package repository available at GitHub Container Registry (ghcr), run 
 ```
 docker pull ghcr.io/clamsproject/bake-swt-visaid:latest
@@ -55,7 +79,7 @@ Videos directory: `/Users/casey/my_vids`
 
 Outputs directory: `/Users/casey/visaids`
 
-And suppose that the video you want to analyze is called `video1.mp4`. For your first run, use a short video (a few minutes), so that you see a result quickly.
+And suppose that the video you want to analyze is called `video1.mp4`.
 
 Then, to create a visaid, run this command (substituting in the names of your directories and your video file):
 
@@ -112,6 +136,8 @@ docker run --rm -v /Users/casey/my_vids:/data -v /Users/casey/visaids:/output gh
 - To process all videos in the mounted directory itself, use `.` as the input.
 - Output files are named after the input file (`<name>_visaid.html` and `<name>_swt.mmif`) and are all written directly to the output directory. Two input files with the same name in different directories write to the same output files.
 - Use the `-n` option if you do not need the MMIF files.
+- With the `--skip` option, a video that already has a visaid in the output directory is skipped, so you can stop a long run and continue it later.
+- When a video cannot be processed, the run continues with the next video. A list of the failed videos is printed at the end. For a video that failed in scene detection, the MMIF file is kept and contains the error.
 
 # General usage
 
@@ -146,6 +172,7 @@ This is the `[options]` part of the above example command. Available options are
 - `-h` : display a help message and exit (do not use with other options)
 - `-c config_name` : specify the configuration file to use (default is `default`, see below for what this configuration file is for)
 - `-n` : do not output intermediate MMIF files (default is to output)
+- `-s`, `--skip` : skip a video when its visaid already exists (default is to process it again)
 - `-x video_extensions` : specify a comma-separated list of extensions (default is `mp4,mkv,avi`)
 
 > [!NOTE]
